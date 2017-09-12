@@ -17,6 +17,7 @@ See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to gene
      dynachart.pl accepts input from STDIN
 
      This script will read CSV data created by asm-metrics-collector.pl or asm-metrics-aggregator.pl
+</pre>
 </h3>
 
 <h3>SYNOPSIS
@@ -40,7 +41,7 @@ See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to gene
 
 
      dynachart.pl --spreadsheet-file sar-disk-test.xlsx --combined-chart --worksheet-col DEV --category-col 'timestamp' --chart-cols 'rd_sec/s' --chart-cols 'wr_sec/s' < sar-disk-test.csv
-</h3>
+</pre>
 
 <h3>OPTIONS</h3>
 <pre>
@@ -70,7 +71,7 @@ See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to gene
              Column to use as the category for the X line in the chart - default to the first column
              The name must exactly match a column from the CSV file
              Typically this line is a timestamp
-</h3>
+</pre>
 
 <h3>DESCRIPTION</h3>
     dynachart.pl creates an excel file with charts for selected columns>
@@ -88,7 +89,7 @@ See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to gene
 
      dynachart.pl --spreadsheet-file sar-disk-test.xlsx --combined-chart --worksheet-col DEV --category-col 'timestamp' --chart-cols 'rd_sec/s' --chart-cols 'wr_sec/s' < sar-disk-test.csv
 
-</h3>
+</pre>
 
 
 <h3>sar-chart.sh</h3>
@@ -122,11 +123,12 @@ example:
  working on sar-paging-rate.xlsx
  working on sar-swap-rate.xlsx
 
+</pre>
+
 <h3>example of generated chart</h3>
 
-<img src='https://github.com/jkstill/dynachart/blob/master/disk-chart-example.PNG' alt='Example: generated with dynachart.pl' width='1024' height='768' />
+<img src='https://github.com/jkstill/csv-tools/blob/master/dynachart/disk-chart-example.PNG' alt='Example: generated with dynachart.pl' width='1024' height='768' />
 
-</pre>
 
 
 
