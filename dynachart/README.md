@@ -127,7 +127,7 @@ example:
 
 <h3>example of generated chart</h3>
 
-<img src='https://github.com/jkstill/csv-tools/blob/master/dynachart/disk-chart-example.PNG' alt='Example: generated with dynachart.pl' width='1024' height='768' />
+<img src='https://github.com/jkstill/csv-tools/blob/master/dynachart/disk-chart-example.PNG' alt='Example: generated with dynachart.pl' />
 
 
 
