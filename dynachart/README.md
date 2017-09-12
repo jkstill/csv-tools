@@ -122,6 +122,10 @@ example:
  working on sar-paging-rate.xlsx
  working on sar-swap-rate.xlsx
 
+<h3>example of generated chart</h3>
+
+<img src='https://github.com/jkstill/dynachart/blob/master/disk-chart-example.PNG' alt='Example: generated with dynachart.pl' width='1024' height='768' />
+
 </pre>
 
 
