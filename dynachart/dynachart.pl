@@ -68,7 +68,10 @@ $wrapFormat->set_align('vjustify');
 
 
 my $labels=<>;
-chomp $labels;
+#chomp $labels;
+# windows created files may have CR
+# chomp on linux will not remove the CR
+$labels =~ s/[\r\n]+$//;
 # sadf starts header lines with '# ' - remove that
 $labels =~ s/^#\s+//;
 my @labels = split(/,\s*/,$labels);
@@ -115,9 +118,12 @@ print "\nworkSheetColPos: $workSheetColPos\n" if $debug;
 my @chartColPos=();
 {
 	my $i=0;
+	print "validating chart columns\n" if $debug;
 	foreach my $label ( @labels)  {
 		foreach my $chartCol ( @chartCols ) {
+			print "label: |$label|\nchartCol: |$chartCol|\n============\n" if $debug;
 			if ($label eq $chartCol) { 
+				print "Pushing $i to \@chartColPos\n" if $debug;
 				push @chartColPos, $i;
 				last;
 			}
@@ -127,6 +133,7 @@ my @chartColPos=();
 }
 
 if ($debug) {
+	print "\nworkSheetCol:\n", Dumper(\$workSheetCol);
 	print "\nChartCols:\n", Dumper(\@chartCols);
 	print "\nChartColPos:\n", Dumper(\@chartColPos);
 	print "\nLabels:\n", Dumper(\@labels);
@@ -150,7 +157,10 @@ unless ($noDirectory) {
 
 while (<>) {
 
-	chomp;
+	#chomp; 
+	# windows created files may have CR
+	# chomp on linux will not remove the CR
+	s/[\r\n]+$//;
 	my @data=split(/,/);
 
 	my $currWorkSheetName;
