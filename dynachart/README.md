@@ -71,6 +71,15 @@ See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to gene
              Column to use as the category for the X line in the chart - default to the first column
              The name must exactly match a column from the CSV file
              Typically this line is a timestamp
+
+    --delimiter
+             The default input delimiter is a comma - ,
+             Change the delimiter to some other value
+
+             eg. change to a colon
+               --delimiter :
+
+
 </pre>
 
 <h3>DESCRIPTION</h3>

@@ -20,6 +20,7 @@ my ($help,$man);
 my @chartCols;
 my $categoryColName='';
 my $categoryColNum=0;
+my $delimiter=','; # default delimiter of comma
 
 Getopt::Long::GetOptions(
 	\%optctl, 
@@ -29,6 +30,7 @@ Getopt::Long::GetOptions(
 	'combined-chart!' => \$combinedChart,
 	'worksheet-col=s',  # creates a separate worksheet per value of this column
 	'category-col=s' => \$categoryColName,
+	'delimiter=s' => \$delimiter,
 	'h|help|?' => \$help, man => \$man
 ) or pod2usage(2) ;
 
@@ -74,7 +76,7 @@ my $labels=<>;
 $labels =~ s/[\r\n]+$//;
 # sadf starts header lines with '# ' - remove that
 $labels =~ s/^#\s+//;
-my @labels = split(/,\s*/,$labels);
+my @labels = split(/$delimiter\s*/,$labels);
 
 if ($debug) {
 
@@ -155,13 +157,13 @@ unless ($noDirectory) {
 	$directory->write_row($directoryLineCount++,0,['Directory'],$boldFormat);
 }
 
-while (<>) {
+while (<STDIN>) {
 
 	#chomp; 
 	# windows created files may have CR
 	# chomp on linux will not remove the CR
 	s/[\r\n]+$//;
-	my @data=split(/,/);
+	my @data=split(/$delimiter/);
 
 	my $currWorkSheetName;
 	if ($workSheetCol) {
@@ -354,6 +356,14 @@ Prints the manual page and exits.
  Column to use as the category for the X line in the chart - default to the first column
  The name must exactly match a column from the CSV file
  Typically this line is a timestamp
+
+=item B<--delimiter>
+
+ The default input delimiter is a comma - ,
+ Change the delimiter to some other value
+
+ eg. change to a colon
+    --delimiter :
 
 =back
 
