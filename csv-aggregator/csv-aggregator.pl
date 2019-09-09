@@ -20,6 +20,8 @@ my $help = 0;
 my @groupingCols=();
 my @aggCols=();
 my @keyCols=();
+my $aggOperation='sum';
+my @aggValidOps=qw(sum avg min max);
 my @displayCols=();
 my @filterCols=();
 my @filterVals=();
@@ -35,9 +37,12 @@ GetOptions(\%optctl,
 	"agg-cols=s{1,10}" => \@aggCols,
 	"filter-cols=s{1,}" => \@filterCols,
 	"filter-vals=s{1,}" => \@filterVals,
+	"agg-op|agg-operation=s" => \$aggOperation,
 	"debug!",
 	'help|?' => \$help, man => \$man
 ) or pod2usage(2) ;
+
+pod2usage(1) unless grep(/^${aggOperation}$/,@aggValidOps);
 
 pod2usage(1) if $help;
 pod2usage(-verbose => 2) if $man;
@@ -71,7 +76,6 @@ if ($listAvailableCols) {
 	exit;
 }
 
-print "\n\@groupingCols:\n" . Dumper(\@groupingCols) if $debug;
 
 die "no grouping columns specified via --grouping-cols \n\n" unless $#groupingCols >= 0;
 # aggregate columns are those for which values are additive
@@ -88,17 +92,18 @@ my @availGroupingCols=@availDisplayCols;
 # columns that can be added
 my @availAggCols=@availDisplayCols;
 
-print "\n\@availAggCols: \n" . Dumper(\@availAggCols) if $debug;
 
-@displayCols = (@keyCols,@aggCols);
+@displayCols = (@keyCols,@groupingCols,@aggCols);
 
 if ($debug) {
-	print "\n\@keyCols \n" . Dumper(\@keyCols) . "\n";
-	print "\n\@aggCols \n" . Dumper(\@aggCols) . "\n";
-	print "\n\@groupingCols \n" . Dumper(\@groupingCols) . "\n";
+	print "\n\@availAggCols: \n" . Dumper(\@availAggCols);
+	print "\n\@availGroupingCols \n" . Dumper(\@availGroupingCols) . "\n";
 	print "\n\@displayCols \n" . Dumper(\@displayCols) . "\n";
+	print "\n\@groupingCols \n" . Dumper(\@groupingCols) . "\n";
+	print "\n\@keyCols \n" . Dumper(\@keyCols) . "\n";
+	print "\n\@groupingCols:\n" . Dumper(\@groupingCols) if $debug;
+	print "\n\@aggCols \n" . Dumper(\@aggCols) . "\n";
 }
-
 
 
 # if columns used for grouping are not already in the display list, add them
@@ -183,18 +188,20 @@ my $prevKey='';
 
 # print header line
 print join($outputDelimiter,@displayCols) . ',';
-print join($outputDelimiter,@aggCols) . "\n";
+print join($outputDelimiter,map{ $_ . '_' . uc($aggOperation)} @aggCols) . "\n";
 
 #exit;
+
+my $setCount=1;
 
 while(<>) {
 
 	chomp;
-	my @data=split(/$delimiter/);
+	my @line=split(/$delimiter/);
 
 	if ($useFilter) {
 		my @filterColPos = map { $colPos{$_} } @filterCols ;
-		my @searchData = @data[ @filterColPos ];
+		my @searchData = @line[ @filterColPos ];
 
 		# die if delimiter eq space, as this just will not work then
 		if ( $delimiter eq ' ') {
@@ -208,16 +215,16 @@ while(<>) {
 		if ( $searchData =~ /$searchPattern/ ) {
 			;
 			#print "## Accepting this line\n";
-			#print '## ' . join("$delimiter",@data) . "\n";
+			#print '## ' . join("$delimiter",@line) . "\n";
 		} else {
 			#print "## Rejecting this line\n";
-			#print '## ' . join("$delimiter",@data) . "\n";
+			#print '## ' . join("$delimiter",@line) . "\n";
 			next;
 		}
 
 	}
 
-	my @setKeys = map { $data[$colPos{$_}] } @keyCols;
+	my @setKeys = map { $line[$colPos{$_}] } @keyCols;
 	my $setKey = join(':',@setKeys);
 	#print "setKey $setKey\n" if $debug;
 
@@ -225,6 +232,7 @@ while(<>) {
 		if ($firstPass) {
 			$firstPass=0;
 		} else {
+			#print "setCount: $setCount\n";
 			if ($debug) {
 				print '=' x 80, "\n";
 				print "Set Key: $prevKey\n";
@@ -245,14 +253,27 @@ while(<>) {
 				# and now the calculated columns
 				foreach my $outCol (@aggCols) {
 					print "$outputDelimiter";
-					print "$aggs{$aggKey}->{$outCol}";
+					my $outVal;
+					# already calculated
+					if ( $aggOperation =~ /^(sum|min|max)$/ ) {
+						$outVal = $aggs{$aggKey}->{$outCol};
+					} elsif ($aggOperation eq 'avg' ) {
+						$outVal = $aggs{$aggKey}->{$outCol} / $setCount;
+					} else {
+						die "Unexpected error printing output\n";
+					}
+					printf("%04.6f", $outVal);
 				}
 				print "\n";
 			}
 
+			$setCount=1;
 			%aggs=();
 		}
+	} else { 
+		$setCount++;
 	}
+
 	$prevKey=$setKey;
 
 	my @aggKeyValues;
@@ -262,14 +283,44 @@ while(<>) {
 	print "\$aggKey: $aggKey\n" if $debug;
 
 	foreach my $displayCol (@displayCols) {
-		$aggs{$aggKey}->{$displayCol} = $data[$colPos{$displayCol}];
+		$aggs{$aggKey}->{$displayCol} = $line[$colPos{$displayCol}];
 	}
 
 	foreach my $aggCol ( @aggCols ) {
-		$aggs{$aggKey}->{$aggCol} = 
-			defined $aggs{$aggKey}->{$aggCol} 
-				? $aggs{$aggKey}->{$aggCol} += $data[$colPos{$aggCol}]
-				: $data[$colPos{$aggCol}];
+		#print "aggCol: $aggCol\n";
+		#print "aggKey: $aggKey\n";
+
+		# iterate over each agg column in the line of data
+		if ( $aggOperation =~ /^(sum|avg)$/ ) {
+			$aggs{$aggKey}->{$aggCol} = 
+				defined $aggs{$aggKey}->{$aggCol} 
+					? $aggs{$aggKey}->{$aggCol} += $line[$colPos{$aggCol}]
+					: $line[$colPos{$aggCol}];
+		} elsif ( $aggOperation eq 'min' ) {
+				if ( defined $aggs{$aggKey}->{$aggCol} ) {
+					if ( 
+						( $aggs{$aggKey}->{$aggCol} > $line[$colPos{$aggCol}] )
+						&& $line[$colPos{$aggCol}] > 0
+					) {
+						$aggs{$aggKey}->{$aggCol} = $line[$colPos{$aggCol}];
+					}
+				} else {
+					$aggs{$aggKey}->{$aggCol} = $line[$colPos{$aggCol}];
+				}
+					
+		} elsif ( $aggOperation eq 'max' ) {
+				if ( defined $aggs{$aggKey}->{$aggCol} ) {
+					if ( $aggs{$aggKey}->{$aggCol} < $line[$colPos{$aggCol}] ) {
+						$aggs{$aggKey}->{$aggCol} = $line[$colPos{$aggCol}];
+					}
+				} else {
+					$aggs{$aggKey}->{$aggCol} = $line[$colPos{$aggCol}];
+				}
+					
+		} else {
+			die "unknown operation in calculations\n";
+		}
+
 	}
 
 } 
@@ -327,6 +378,11 @@ sample [options] [file ...]
    --key-cols list of columns that define a set of data
    --grouping-cols list of columns used as a key for aggregating additive data
    --agg-cols list of additive columns to be aggretated
+	--agg-op or --agg-operation: 
+	  aggregate operation to perform
+	  valid values are: sum min max avg
+	  default is 'sum'
+	  note: 'min' does not report values of zero
    --list-available-cols just the header line of the file will be read and available columns displayed
    --delimiter input field delimiter - default is ,
    --output-delimiter output field delimiter - default is ,
@@ -345,63 +401,71 @@ sample [options] [file ...]
 
 =item B<--help>
 
-Print a brief help message and exits.
+ Print a brief help message and exits.
 
 =item B<--man>
 
-Prints the manual page and exits.
+ Prints the manual page and exits.
 
-B< List All Columns from the CSV file>
+=item B<--list-available-cols>
 
  Only the header line of the file will be read and available columns displayed
 
 =item B<--key-cols>
 
-  List of columns that define a set of data
-  Data is aggregated within this set
+ List of columns that define a set of data
+ Data is aggregated within this set
 
-  example: sar data will have a time stamp. 
-  you may wish to aggregate data for all disks per each timestamp
+ example: sar data will have a time stamp. 
+ you may wish to aggregate data for all disks per each timestamp
+
+ May be repeated as often as needed.
 
 =item B<--grouping-cols>
 
  List of columns that will be used to group the data for aggregation
 
-B< Available Grouping Columns:>
-
- Simply the list of all columns
+ May be repeated as often as needed.
 
 =item B<--agg-cols>
 
  List of columns that will be additively aggregated
 
-B< Available Aggregated Columns:>
+ May be repeated as often as needed.
 
- Simply the list of all columns
+=item B<--agg-operation> or B<--agg-op>
+
+ Aggregate operation to perform
+
+ Valid values are: sum min max avg
+
+ Default is 'sum'
+
+ Note: 'min' does not report values of zero
 
 =item B<--filter-cols>
 
-The names of the column(s) used to filter the data.
+ The names of the column(s) used to filter the data.
 
-May be repeated as often as needed
+ May be repeated as often as needed
 
 =item B<--filter-vals>
 
-The values to use with column names specified in --filter-cols 
+ The values to use with column names specified in --filter-cols 
 
-May be repeated as often as needed.
+ May be repeated as often as needed.
 
 =item B<--list-available-cols>
 
-Read the header line of the input file, display the column names and exit
+ Read the header line of the input file, display the column names and exit
 
 =item B<--delimiter>
 
-The character used as a delimiter between output fields for the CSV input.
+ The character used as a delimiter between output fields for the CSV input.
 
 =item B<--output-delimiter>
 
-The character used as an delimiter between output fields for the CSV output.
+ The character used as an delimiter between output fields for the CSV output.
 
 
 =back
@@ -421,7 +485,9 @@ B<asm-metrics-aggregtor.pl> is used to aggregate a slice of the data output by B
 
  example: 
 
- csv-aggregator.pl   --key-cols timestamp --grouping-cols DEV --agg-cols tps --agg-cols 'rd_sec/s' --agg-cols 'wr_sec/s'  < sar-csv/sar-disk-test.csv
+ Note: the default delimiter from sadf (sar) is a semi-colon
+
+ csv-aggregator.pl --delimiter ';'  --key-cols timestamp --grouping-cols DEV --agg-cols tps --agg-cols 'rd_sec/s' --agg-cols 'wr_sec/s'  < sar-csv/sar-disk-test.csv
 
  2017-07-07 04:10:01 UTC,14717.25,209380.68,250210.78
  2017-07-07 04:20:01 UTC,18188.36,343755.49,340803.6
@@ -435,7 +501,7 @@ B<asm-metrics-aggregtor.pl> is used to aggregate a slice of the data output by B
  ...
 
 
- csv-aggregator.pl   --filter-cols DEV   --filter-vals 'DATA..' \
+ csv-aggregator.pl  --delimiter ';'  --filter-cols DEV   --filter-vals 'DATA..' \
     --key-cols hostname --key-cols timestamp \
     --grouping-cols DEV \
     --agg-cols tps --agg-cols 'rd_sec/s' --agg-cols 'wr_sec/s'  < sar-csv/sar-disk-test.csv > sar-csv/sar-disk-test-filtered.csv
