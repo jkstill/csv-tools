@@ -72,7 +72,10 @@ my @availDisplayCols=split(/$delimiter/,$hdrs);
 
 
 if ($listAvailableCols) {
-	print join("\n",@availDisplayCols),"\n";
+	my $i=1;
+	#print join("\n",@availDisplayCols),"\n";
+	# print position number as well, starting with 1
+	print map { $i++ . qq{ $_\n} } @availDisplayCols;
 	exit;
 }
 
