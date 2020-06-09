@@ -25,18 +25,22 @@ my @aggValidOps=qw(sum avg min max);
 my @displayCols=();
 my @filterCols=();
 my @filterVals=();
+my $filterRegex=0;
 my $searchPattern=();
 my $useFilter=0;
+my $printFormat="%04.6f";
 
 GetOptions(\%optctl,
 	"delimiter=s",
 	"output-delimiter=s",
+	"print-format=s" => \$printFormat,
 	'list-available-cols!',
 	"grouping-cols=s{1,10}" => \@groupingCols,
 	"key-cols=s{1,10}" => \@keyCols,
 	"agg-cols=s{1,10}" => \@aggCols,
 	"filter-cols=s{1,}" => \@filterCols,
 	"filter-vals=s{1,}" => \@filterVals,
+	"filter-regex!" => \$filterRegex,
 	"agg-op|agg-operation=s" => \$aggOperation,
 	"debug!",
 	'help|?' => \$help, man => \$man
@@ -62,6 +66,10 @@ if ( $#filterCols != $#filterVals ) {
 	die "\nThe number of values for --filter-cols must match the number of values for --filter-vals\n";
 }
 
+if ($filterRegex and $#filterCols) { # only 1 filtercols|filtervals allowed for regex
+	die "Only 1 --filter-cols and --filter-vals allowed with --filter-regex";
+}
+
 my $hdrs=<>;
 chomp $hdrs;
 
@@ -72,10 +80,7 @@ my @availDisplayCols=split(/$delimiter/,$hdrs);
 
 
 if ($listAvailableCols) {
-	my $i=1;
-	#print join("\n",@availDisplayCols),"\n";
-	# print position number as well, starting with 1
-	print map { $i++ . qq{ $_\n} } @availDisplayCols;
+	print join("\n",@availDisplayCols),"\n";
 	exit;
 }
 
@@ -154,13 +159,18 @@ $useFilter =  ( $#filterCols >= 0 ) ? 1 : 0;
 
 if ( $useFilter ) {
 
-	my $searchPatternPFX='(?=.*(:|\b)';
-	my $searchPatternSFX='\b)';
+	if ($filterRegex) { # use the filter values as a regex
+		$searchPattern =$filterVals[0];
+	} else {
 
-	foreach my $term ( @filterVals ) {
-		# change spaces to underscore - this allows using \b word separator in pattern 
-		$term =~ s/\s/_/g;
-		$searchPattern .= "${searchPatternPFX}${term}${searchPatternSFX}{1}";
+		my $searchPatternPFX='(?=.*(:|\b)';
+		my $searchPatternSFX='\b)';
+
+		foreach my $term ( @filterVals ) {
+			# change spaces to underscore - this allows using \b word separator in pattern 
+			$term =~ s/\s/_/g;
+			$searchPattern .= "${searchPatternPFX}${term}${searchPatternSFX}{1}";
+		}
 	}
 
 	warn "Search Pattern: $searchPattern\n";
@@ -185,7 +195,7 @@ print "\%colPos:\n" , Dumper(\%colPos) if $debug;
 #    the order of metrics within a timestamp is unimportant.
 
 my %aggs=(); # aggregates
-my $firstPass=1;
+my $firstPass=1;;
 my $prevKey='';
 
 
@@ -214,14 +224,19 @@ while(<>) {
 		# change data spaces to underscore
 		@searchData = map { s/\s/_/g; $_  } @searchData;
 		my $searchData=join(' ',@searchData);
+
+		print '#' x 80 . "\n" if $debug;
+		print "## Pattern: $searchPattern\n" if $debug;
+		print "## Search Data:\n" if $debug;
+		print "## $searchData\n" if $debug;
 		
 		if ( $searchData =~ /$searchPattern/ ) {
 			;
-			#print "## Accepting this line\n";
-			#print '## ' . join("$delimiter",@line) . "\n";
+			print "## Accepting this line\n" if $debug;
+			print '## ' . join("$delimiter",@line) . "\n" if $debug;
 		} else {
-			#print "## Rejecting this line\n";
-			#print '## ' . join("$delimiter",@line) . "\n";
+			print "## Rejecting this line\n" if $debug;
+			print '## ' . join("$delimiter",@line) . "\n" if $debug;
 			next;
 		}
 
@@ -251,7 +266,22 @@ while(<>) {
 				foreach my $outCol (@displayCols) {
 					print "$outputDelimiter" unless $firstCol;
 					$firstCol=0 if $firstCol;
-					print "$aggs{$aggKey}->{$outCol}";
+					# this will use the most recent value for the key column
+					# which is probably not what is wanted
+					#print "$aggs{$aggKey}->{$outCol}";
+
+					# this will print the name of the columm, which is better for aggregates
+					# it is assumed you know already what type of device is in this column
+					#print "$outCol";
+
+					# but, we do want the value of the column if it is a key column (timestamp for instance
+					if ( grep(/^${outCol}$/,@keyCols ) ) {
+						print "$aggs{$aggKey}->{$outCol}";
+					} else {
+						#print "$outCol"; # column name
+						print "$aggOperation"; # whatever aggregation op is being done - sum, min, etc
+					}
+
 				}
 				# and now the calculated columns
 				foreach my $outCol (@aggCols) {
@@ -265,7 +295,7 @@ while(<>) {
 					} else {
 						die "Unexpected error printing output\n";
 					}
-					printf("%04.6f", $outVal);
+					printf("$printFormat", $outVal);
 				}
 				print "\n";
 			}
@@ -380,6 +410,7 @@ sample [options] [file ...]
    --man  full documentation
    --key-cols list of columns that define a set of data
    --grouping-cols list of columns used as a key for aggregating additive data
+	--print-format an sprintf() legal print format
    --agg-cols list of additive columns to be aggretated
 	--agg-op or --agg-operation: 
 	  aggregate operation to perform
@@ -387,6 +418,9 @@ sample [options] [file ...]
 	  default is 'sum'
 	  note: 'min' does not report values of zero
    --list-available-cols just the header line of the file will be read and available columns displayed
+	--filter-cols sar column to filter on
+	--filter-vals values to filter the column specified
+	--filter-regex specify this if --filter-vals is a regex
    --delimiter input field delimiter - default is ,
    --output-delimiter output field delimiter - default is ,
 
@@ -452,11 +486,36 @@ sample [options] [file ...]
 
  May be repeated as often as needed
 
+ The type of aggregation specified with --agg-operation will replace the value of the device or metric being aggregated
+
+=item B<--print-format>
+
+ An sprintf() legal print format.
+
+ Default is "%04.6f"
+
 =item B<--filter-vals>
 
  The values to use with column names specified in --filter-cols 
 
  May be repeated as often as needed.
+
+=item B<--filter-regex>
+
+ Treat the value in --filter-vals as a standalone regex
+
+ Without this flag, some internal processing is performed on the value for --filter-vals
+
+ This option may be used only with a single --filter-vals argument
+
+ In addition, keep in mind that the regex is applied to the specified field only, not the entire line of data
+
+ The following would be used to filter particular disk devices from a CSV file of sar disk data, getting only
+ devices of major 252, minor 0-12, 14 and 17
+
+ --delimiter ','  --key-cols timestamp --grouping-cols DEV  --agg-cols tps --agg-cols 'rd_sec/s' --agg-cols 'wr_sec/s' 
+   --agg-operation sum \
+	--filter-regex --filter-cols DEV --filter-vals '^dev252-([0-9]{1}?|10|11|12|14|17)$'   < sar-csv/sar-disk.csv
 
 =item B<--list-available-cols>
 
