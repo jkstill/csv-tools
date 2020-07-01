@@ -21,6 +21,7 @@ my @chartCols;
 my $categoryColName='';
 my $categoryColNum=0;
 my $delimiter=','; # default delimiter of comma
+my $listAvailableColumns=0;
 
 Getopt::Long::GetOptions(
 	\%optctl, 
@@ -28,6 +29,7 @@ Getopt::Long::GetOptions(
 	'debug!' => \$debug,
 	'chart-cols=s{1,10}' => \@chartCols,
 	'combined-chart!' => \$combinedChart,
+	'list-available-columns!' => \$listAvailableColumns,
 	'worksheet-col=s',  # creates a separate worksheet per value of this column
 	'category-col=s' => \$categoryColName,
 	'delimiter=s' => \$delimiter,
@@ -77,6 +79,14 @@ $labels =~ s/[\r\n]+$//;
 # sadf starts header lines with '# ' - remove that
 $labels =~ s/^#\s+//;
 my @labels = split(/$delimiter\s*/,$labels);
+
+if ($listAvailableColumns) {
+
+	print join("\n",@labels),"\n";
+	exit;
+
+}
+
 
 if ($debug) {
 
@@ -364,6 +374,10 @@ Prints the manual page and exits.
 
  eg. change to a colon
     --delimiter :
+
+=item B<--list-available-columns>
+
+ List the columns from the first line of the file and exit
 
 =back
 
