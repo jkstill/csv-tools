@@ -20,6 +20,10 @@ my ($help,$man);
 my @chartCols;
 my $categoryColName='';
 my $categoryColNum=0;
+
+my $chartType='line';
+my @chartTypesAvailable=qw(area bar column line pie doughnut scatter stock);
+
 my $delimiter=','; # default delimiter of comma
 my $listAvailableColumns=0;
 
@@ -28,6 +32,7 @@ Getopt::Long::GetOptions(
 	'spreadsheet-file=s',
 	'debug!' => \$debug,
 	'chart-cols=s{1,10}' => \@chartCols,
+	'chart-type=s' => \$chartType,
 	'combined-chart!' => \$combinedChart,
 	'list-available-columns!' => \$listAvailableColumns,
 	'worksheet-col=s',  # creates a separate worksheet per value of this column
@@ -38,6 +43,17 @@ Getopt::Long::GetOptions(
 
 pod2usage(1) if $help;
 pod2usage(-verbose => 2) if $man;
+
+
+unless ( grep { $_ eq $chartType } @chartTypesAvailable) { 
+	print qq {
+
+$chartType is not valid chart type
+
+};
+	pod2usage(1);
+}
+
 
 my $xlFile = defined($optctl{'spreadsheet-file'}) ? $optctl{'spreadsheet-file'} : 'asm-metrics.xlsx';
 my $workSheetCol = defined($optctl{'worksheet-col'}) ? $optctl{'worksheet-col'} : 0;
@@ -231,7 +247,7 @@ foreach my $workSheet ( keys %workSheets ) {
 	my $chartNum = 0;
 
 	if ($combinedChart) {
-		my $chart = $workBook->add_chart( type => 'line', name => "Combined" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
+		my $chart = $workBook->add_chart( type => $chartType, name => "Combined" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
 		$chart->set_size( width => $chartWidth, height => $chartHeight * $rowHeight);
 		
 		# each chart consumes about 16 rows
@@ -252,7 +268,7 @@ foreach my $workSheet ( keys %workSheets ) {
 		foreach my $colPos ( @chartColPos ) {
 			my $col2Chart=$labels[$colPos];
 			print "\tCharting column: $col2Chart\n" if $debug;
-			my $chart = $workBook->add_chart( type => 'line', name => "$col2Chart" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
+			my $chart = $workBook->add_chart( type => $chartType, name => "$col2Chart" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
 			$chart->set_size( width => $chartWidth, height => $chartHeight * $rowHeight);
 
 			# each chart consumes about 16 rows
@@ -298,6 +314,7 @@ dynachart.pl
   --spreadsheet-file output file name - defaults to asm-metrics.xlsx
   --worksheet-col name of column used to segragate data into worksheets 
     defaults to a single worksheet if not supplied
+  --chart-type default chart type is 'line'
   --chart-cols list of columns to chart
 
  dynachart.pl accepts input from STDIN
@@ -315,6 +332,7 @@ dynachart.pl [options] [file ...]
    --spreadsheet-file output file name - defaults to asm-metrics.xlsx
    --worksheet-col name of column used to segragate data into worksheets 
      defaults to a single worksheet if not supplied
+  --chart-type default chart type is 'line'
   --chart-cols list of columns to chart
   --category-col specify the column for the X vector - a timestamp is typically used 
     the name must exactly match that in the header
@@ -349,6 +367,20 @@ Prints the manual page and exits.
 
  By default a single worksheet is created.
  When this option is used the column supplied as an argument will be used to segragate data into separate worksheets.
+
+=item B<--chart-type>
+
+ The valid charts are 
+  area 
+  bar 
+  column 
+  line 
+  pie 
+  doughnut 
+  scatter 
+  stock
+
+ The default chart type is 'line'
 
 =item B<--chart-cols>
 
