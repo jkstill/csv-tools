@@ -100,6 +100,7 @@ If the avg value of one of the the metrics exceeds a threshold, print a histogra
 
 Assuming a directory structure of
 
+```text
 rac02
 ├── diskgroup-breakout
 │   ├── GEN_DATA.csv
@@ -112,6 +113,7 @@ rac02
 │   ├── GEN_FRA.csv
 │   ├── GEN_REDOA.csv
 ...
+```
 
 There are no parameters to pass, just modify values at the top of the script
 
