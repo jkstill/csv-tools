@@ -393,7 +393,7 @@ __END__
 
 =head1 NAME
 
-asm-metrics-aggregator.pl
+csv-aggregator.pl
 
   -help brief help message
   -man  full documentation
@@ -404,11 +404,11 @@ asm-metrics-aggregator.pl
   --delimiter input field delimiter - default is ,
   --output-delimiter output field delimiter - default is ,
 
- asm-metrics-aggregator.pl acts as a filter - all input is from STDIN
+ csv-aggregator.pl acts as a filter - all input is from STDIN
  As the number of columns can vary it is necessary to use the -- operator to notify
  the options processor to stop processing command line options.
  
- asm-metrics-aggregator.pl --grouping-cols DISKGROUP_NAME DISK_NAME  --agg-cols READS WRITES -- my_input_file.csv
+ csv-aggregator.pl --grouping-cols DISKGROUP_NAME DISK_NAME  --agg-cols READS WRITES -- my_input_file.csv
 
 =head1 SYNOPSIS
 
@@ -433,11 +433,11 @@ sample [options] [file ...]
    --delimiter input field delimiter - default is ,
    --output-delimiter output field delimiter - default is ,
 
- asm-metrics-aggregator.pl acts as a filter - all input is from STDIN
+ csv-aggregator.pl acts as a filter - all input is from STDIN
  As the number of columns can vary it is necessary to use the -- operator to notify
  the options processor to stop processing command line options.
 
- asm-metrics-aggregator.pl --grouping-cols DISKGROUP_NAME DISK_NAME  --agg-cols READS WRITES -- my_input_file.csv
+ csv--aggregator.pl --grouping-cols DISKGROUP_NAME DISK_NAME  --agg-cols READS WRITES -- my_input_file.csv
 
  output columns will be the columns specied in the --key-cols and --agg-cols arguments in the order entered
 
@@ -543,7 +543,7 @@ sample [options] [file ...]
 
 =head1 DESCRIPTION
 
-B<asm-metrics-aggregtor.pl> is used to aggregate a slice of the data output by B<asm-metrics-collector.pl>
+B<csv--aggregtor.pl> is used to aggregate slices of the data in CSV files 
 
 
 =head1 EXAMPLES
