@@ -31,7 +31,7 @@ $  head -2 ../csv-combine/csv/parameters_inst_3.csv | ./csv2row.pl
 
 ```
 
-## csvhdr.pl
+## csvhdr.sh
 
 A simple shell script that calls csv2row.pl with the first line of a CSV file.
 
