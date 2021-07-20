@@ -1,12 +1,13 @@
 
-<h2>Dynachart</h2>
+Dynachart
+=========
 
-See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to generate CSV files from sar data.
+See asp.sh in [sar-tools](https://github.com/jkstill/sar-tools>sar-tools) to generate CSV files from sar data.
 
 
-<h3>dynachart.pl</h3>
+## dynachart.pl
 
-<pre>
+```text
       --help brief help message
       --man  full documentation
       --spreadsheet-file output file name - defaults to asm-metrics.xlsx
@@ -17,12 +18,13 @@ See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to gene
      dynachart.pl accepts input from STDIN
 
      This script will read CSV data created by asm-metrics-collector.pl or asm-metrics-aggregator.pl
-</pre>
-</h3>
+```
 
-<h3>SYNOPSIS
+### SYNOPSIS
+
+```text
     dynachart.pl [options] [file ...]</h3>
-<pre>
+
 
      Options:
        --help brief help message
@@ -41,10 +43,11 @@ See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to gene
 
 
      dynachart.pl --spreadsheet-file sar-disk-test.xlsx --combined-chart --worksheet-col DEV --category-col 'timestamp' --chart-cols 'rd_sec/s' --chart-cols 'wr_sec/s' < sar-disk-test.csv
-</pre>
+```
 
-<h3>OPTIONS</h3>
-<pre>
+### OPTIONS
+
+```text
     -help   Print a brief help message and exits.
 
     -man    Prints the manual page and exits.
@@ -80,28 +83,31 @@ See asp.sh in <a href=https://github.com/jkstill/sar-tools>sar-tools</a> to gene
                --delimiter :
 
 
-</pre>
+```
 
-<h3>DESCRIPTION</h3>
-    dynachart.pl creates an excel file with charts for selected columns>
+### DESCRIPTION
 
-    Note: Device names greater than 31 characters will be shortened to 31 characters
-    This is to comply with the Microsoft Excel Worksheet naming standard.
 
-	 Example: scsi-360000970000192605774533030464644 will be shortened to scsi-360000970...74533030464644
+dynachart.pl creates an excel file with charts for selected columns>
 
-<h3>EXAMPLES</h3>
-<pre>
+Note: Device names greater than 31 characters will be shortened to 31 characters
+This is to comply with the Microsoft Excel Worksheet naming standard.
+
+Example: scsi-360000970000192605774533030464644 will be shortened to scsi-360000970...74533030464644
+
+### EXAMPLES
+
+```text
      dynachart.pl accepts data from STDIN
 
      dynachart.pl --worksheet-col DISKGROUP_NAME --spreadsheet-file mywork.xlsx
 
      dynachart.pl --spreadsheet-file sar-disk-test.xlsx --combined-chart --worksheet-col DEV --category-col 'timestamp' --chart-cols 'rd_sec/s' --chart-cols 'wr_sec/s' < sar-disk-test.csv
 
-</pre>
+```
 
 
-<h3>sar-chart.sh</h3>
+## sar-chart.sh
 
 Use sar-chart.sh to generate Microsoft Excel spreadsheets from sar data using dynachart.pl.
 
@@ -109,9 +115,9 @@ The CSV files are assumed to be in the current directory
 
 sar-chart.sh destination-directory
 
-<pre>
-
 example:  
+
+```text
 
  $ ./sar-chart.sh ../sar-xlsx
  working on sar-disk-default.xlsx
@@ -132,11 +138,21 @@ example:
  working on sar-paging-rate.xlsx
  working on sar-swap-rate.xlsx
 
-</pre>
+```
 
-<h3>example of generated chart</h3>
+### example of generated chart
 
 <img src='https://github.com/jkstill/csv-tools/blob/master/dynachart/disk-chart-example.PNG' alt='Example: generated with dynachart.pl' />
+
+
+
+
+
+
+
+
+
+
 
 
 
