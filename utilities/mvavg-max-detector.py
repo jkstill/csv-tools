@@ -154,7 +154,7 @@ def main():
         #print('{:0.2f}'.format(ma[i]))
 
     # skip the first windowPeriod of values, as they are 'nan'
-    for windowStart in range(windowPeriod, int(len(ma)) - windowPeriod):
+    for windowStart in range(windowPeriod, int(len(ma)) - windowPeriod, windowPeriod):
       try:
         periodMA = average(ma[windowStart:windowStart + windowPeriod])
       except ZeroDivisionError:

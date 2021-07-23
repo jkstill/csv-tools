@@ -33,10 +33,10 @@ COMMENT
 
 
 # ASM sampled once per minute
-windowPeriod=10
-# time is in seconds
+windowPeriod=60 # 60 minute windows
 maxAllowedIOTime=0.25
-maxThresholdCount=300
+maxAllowedIOTime=0.010
+maxThresholdCount=30
 
 
 for cluster in *-dbrac*
