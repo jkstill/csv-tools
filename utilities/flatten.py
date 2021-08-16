@@ -89,13 +89,39 @@ def getColSets(lines):
   pass
 
 
+def cleanData(lines):
+
+  cleanLines=[]
+  
+  for line in lines:
+    a = line.split(',')
+
+    #print('cleanData: {}'.format(a))
+
+    if ('LINUX-RESTART' in a) \
+        or ('# hostname' in a) \
+        or ('timestamp' in a) \
+        or ('hostname' in a):
+
+      #print('a: {}'.format(a))
+      #print('skipping line: {}'.format(line))
+
+      continue
+
+    cleanLines.append(line)
+
+  return cleanLines
+  
+
 # get a dict of arrays for the data
 # used as source to detect spikes per column
 def getDataSet(columnRef,workingColumns,lines):
   colVals={}
   #print('column#: {}'.format(columnRef))
   for line in lines:
+    #print('line: {}'.format(line))
     a = line.split(',')
+
     for colName in workingColumns:
       #print('colName: {}'.format(colName))
       colNum = columnRef[colName]
@@ -113,6 +139,7 @@ def removeSpikes(spikes, lines, removedLines):
   # the key is the column number in the line
   # remove any line where any of the references values is an outlier
   for line in lines:
+    #print('line: {}'.format(line))
     a = line.split(',')
     for colNum in spikes:
       if float(a[colNum]) in spikes[colNum]:
@@ -146,6 +173,8 @@ def main():
   lines = getLines()
   hdr = getHdr(lines) # array
 
+  lines = cleanData(lines)
+
   if sys.argv[1] == 'hdrs':
     hdrList='\n'.join(hdr)
     print(hdrList)
@@ -163,7 +192,6 @@ def main():
   #print('working columns: {}'.format(' - '.join(workingColumns)), file=sys.stderr)
   #print("file: {} \n   hdr: {}".format(filename,hdr))
   #print('first line: {}'.format(lines[0]))
-
 
   # get the position in the data array for each column to check
   colNums = [ colRefs[i] for i in workingColumns ]
