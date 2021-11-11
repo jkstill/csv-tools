@@ -9,6 +9,8 @@ Example: disk metric data from sar that is collected by device.
 
 A regular expression can be used to aggregate for a set of disks that make up a volume
 
+It is assumed that the data is sorted by the same columns specified by the --key-cols parameters
+
 <h3>csv-aggregator.sh</h3>
 
 Bash script with example usage of csv-aggregator.pl.

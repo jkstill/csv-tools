@@ -441,6 +441,8 @@ sample [options] [file ...]
 
  output columns will be the columns specied in the --key-cols and --agg-cols arguments in the order entered
 
+ Important:  the data is assumed to have been sorted by the values used for --key-cols
+
 =head1 OPTIONS
 
 =over 8
