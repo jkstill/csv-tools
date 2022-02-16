@@ -48,6 +48,23 @@ A simple shell script that calls csv2row.pl with the first line of a CSV file.
 9: "ISADJUSTED"
 ```
 
+## getcol.sh
+
+A Bash script for retrieving column data by column name.
+
+```text
+$  ../getcol.sh -s -f asm-data-20220109-074646.csv  -c READS | head
+READS
+507
+189
+1
+0
+0
+24932
+501
+122
+```
+
 ## flatten.py
 
 Remove extreme peaks from CSV data
