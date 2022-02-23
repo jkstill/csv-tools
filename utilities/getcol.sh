@@ -31,7 +31,7 @@ do
 	case $arg in
 		h) help; exit 0;;
 		d) csvDelimiter=$OPTARG;;
-		g) getHdrAndExit='Y';;
+		g) getHdrAndExit='Y'; columnName='dummy';; # dummy to bypass check further down for columname being empty
 		c) columnName=$OPTARG;;
 		s) skipLineCount=0;;
 		f) csvFile=$OPTARG;;
