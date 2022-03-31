@@ -20,6 +20,7 @@ my ($help,$man);
 my @chartCols;
 my $categoryColName='';
 my $categoryColNum=0;
+my $secondaryAxisCol='';
 
 my $chartType='line';
 my @chartTypesAvailable=qw(area bar column line pie doughnut scatter stock);
@@ -33,6 +34,7 @@ Getopt::Long::GetOptions(
 	'debug!' => \$debug,
 	'chart-cols=s{1,10}' => \@chartCols,
 	'chart-type=s' => \$chartType,
+	'secondary-axis-col=s' => \$secondaryAxisCol,
 	'combined-chart!' => \$combinedChart,
 	'list-available-columns!' => \$listAvailableColumns,
 	'worksheet-col=s',  # creates a separate worksheet per value of this column
@@ -160,6 +162,21 @@ my @chartColPos=();
 	}
 }
 
+# validate secondary axis column
+print "validating secondary axis column\n" if $debug;
+my $foundSecondaryAxisCol=0;
+foreach my $label ( @labels) {
+	if ($label eq $secondaryAxisCol) {
+		$foundSecondaryAxisCol = 1;
+		last;
+	}
+}
+
+if ( ! $foundSecondaryAxisCol ) {
+	warn "\n secondary axis column of '$secondaryAxisCol' is invalid - not using secondary axis\n";
+	$secondaryAxisCol='';
+}
+
 if ($debug) {
 	print "\nworkSheetCol:\n", Dumper(\$workSheetCol);
 	print "\nChartCols:\n", Dumper(\@chartCols);
@@ -260,7 +277,8 @@ foreach my $workSheet ( keys %workSheets ) {
 				name => $col2Chart,
 				#categories => [$workSheet, 1,$lineCount{$workSheet},2,2],
 				categories => [$workSheet, 1,$lineCount{$workSheet},$categoryColNum,$categoryColNum],
-				values => [$workSheet, 1,$lineCount{$workSheet},$colPos,$colPos]
+				values => [$workSheet, 1,$lineCount{$workSheet},$colPos,$colPos],
+				y2_axis => $col2Chart eq $secondaryAxisCol ? 1 : 0
 			);
 		}
 		
@@ -316,6 +334,8 @@ dynachart.pl
     defaults to a single worksheet if not supplied
   --chart-type default chart type is 'line'
   --chart-cols list of columns to chart
+  --secondary-axis-col name of the column to be on secondary axis
+                       works only with combined-chart option
 
  dynachart.pl accepts input from STDIN
 
@@ -334,6 +354,8 @@ dynachart.pl [options] [file ...]
      defaults to a single worksheet if not supplied
   --chart-type default chart type is 'line'
   --chart-cols list of columns to chart
+  --secondary-axis-col name of the column to be on secondary axis
+                       works only with combined-chart option
   --category-col specify the column for the X vector - a timestamp is typically used 
     the name must exactly match that in the header
   --combined-chart create a single chart rather than a chart for each value specified in --chart-cols
@@ -398,6 +420,13 @@ Prints the manual page and exits.
  Column to use as the category for the X line in the chart - default to the first column
  The name must exactly match a column from the CSV file
  Typically this line is a timestamp
+
+=item B<--secondary-axis-col>
+
+ Use a secondary axis for one of the series columns
+
+   --chart-cols TIME --chart-cols READS --chart-col BYTES_READ \
+   --secondary-axis-col BYTES_READ 
 
 =item B<--delimiter>
 
