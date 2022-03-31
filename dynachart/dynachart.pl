@@ -21,6 +21,7 @@ my @chartCols;
 my $categoryColName='';
 my $categoryColNum=0;
 my $secondaryAxisCol='';
+my $autoFilterEnabled=1;
 
 my $chartType='line';
 my @chartTypesAvailable=qw(area bar column line pie doughnut scatter stock);
@@ -35,6 +36,7 @@ Getopt::Long::GetOptions(
 	'chart-cols=s{1,10}' => \@chartCols,
 	'chart-type=s' => \$chartType,
 	'secondary-axis-col=s' => \$secondaryAxisCol,
+	'auto-filter-enabled!' => \$autoFilterEnabled,
 	'combined-chart!' => \$combinedChart,
 	'list-available-columns!' => \$listAvailableColumns,
 	'worksheet-col=s',  # creates a separate worksheet per value of this column
@@ -226,6 +228,8 @@ while (<STDIN>) {
 		$workSheets{$currWorkSheetName}->write_row($lineCount{$currWorkSheetName}++,0,\@labels,$boldFormat);
 		# freeze pane at header
 		$workSheets{$currWorkSheetName}->freeze_panes($lineCount{$currWorkSheetName},0);
+		# autofilter
+		$workSheets{$currWorkSheetName}->autofilter(0,0,0,$#data) if $autoFilterEnabled;
 	}
 
 	# setup column widths
@@ -332,6 +336,7 @@ dynachart.pl
   --spreadsheet-file output file name - defaults to asm-metrics.xlsx
   --worksheet-col name of column used to segragate data into worksheets 
     defaults to a single worksheet if not supplied
+  --auto-filter-enabled enable the drop down Excel filters
   --chart-type default chart type is 'line'
   --chart-cols list of columns to chart
   --secondary-axis-col name of the column to be on secondary axis
@@ -356,6 +361,7 @@ dynachart.pl [options] [file ...]
   --chart-cols list of columns to chart
   --secondary-axis-col name of the column to be on secondary axis
                        works only with combined-chart option
+  --auto-filter-enabled enable the drop down Excel filters
   --category-col specify the column for the X vector - a timestamp is typically used 
     the name must exactly match that in the header
   --combined-chart create a single chart rather than a chart for each value specified in --chart-cols
@@ -427,6 +433,13 @@ Prints the manual page and exits.
 
    --chart-cols TIME --chart-cols READS --chart-col BYTES_READ \
    --secondary-axis-col BYTES_READ 
+
+=item B<--auto-filter-enabled>
+
+  Enable the drop down Excel filters
+
+  Default is ON.  
+  Disable with --noauto-filter-enabled
 
 =item B<--delimiter>
 
