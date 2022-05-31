@@ -166,17 +166,19 @@ my @chartColPos=();
 
 # validate secondary axis column
 print "validating secondary axis column\n" if $debug;
-my $foundSecondaryAxisCol=0;
-foreach my $label ( @labels) {
-	if ($label eq $secondaryAxisCol) {
-		$foundSecondaryAxisCol = 1;
-		last;
+if ($secondaryAxisCol ) {
+	my $foundSecondaryAxisCol=0;
+	foreach my $label ( @labels) {
+		if ($label eq $secondaryAxisCol) {
+			$foundSecondaryAxisCol = 1;
+			last;
+		}
 	}
-}
 
-if ( ! $foundSecondaryAxisCol ) {
-	warn "\n secondary axis column of '$secondaryAxisCol' is invalid - not using secondary axis\n";
-	$secondaryAxisCol='';
+	if ( ! $foundSecondaryAxisCol ) {
+		warn "\n secondary axis column of '$secondaryAxisCol' is invalid - not using secondary axis\n";
+		$secondaryAxisCol='';
+	}
 }
 
 if ($debug) {
