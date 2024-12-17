@@ -24,7 +24,10 @@ my $secondaryAxisCol='';
 my $autoFilterEnabled=1;
 
 my $chartType='line';
+my $chartTitles=1;
 my @chartTypesAvailable=qw(area bar column line pie doughnut scatter stock);
+my @legendPositions=qw(bottom left right top);
+my $legendPosition='bottom';
 
 my $delimiter=','; # default delimiter of comma
 my $listAvailableColumns=0;
@@ -37,7 +40,9 @@ Getopt::Long::GetOptions(
 	'chart-type=s' => \$chartType,
 	'secondary-axis-col=s' => \$secondaryAxisCol,
 	'auto-filter-enabled!' => \$autoFilterEnabled,
+	'legend-position=s' => \$legendPosition,
 	'combined-chart!' => \$combinedChart,
+	'chart-titles!' => \$chartTitles,
 	'list-available-columns!' => \$listAvailableColumns,
 	'worksheet-col=s',  # creates a separate worksheet per value of this column
 	'category-col=s' => \$categoryColName,
@@ -272,6 +277,18 @@ foreach my $workSheet ( keys %workSheets ) {
 	if ($combinedChart) {
 		my $chart = $workBook->add_chart( type => $chartType, name => "Combined" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
 		$chart->set_size( width => $chartWidth, height => $chartHeight * $rowHeight);
+		$chart->set_legend( position => $legendPosition );
+
+		# combined chart should only be 2 columns
+		if ($chartTitles) {
+			my $chartTitleCols = '';
+			foreach my $colPos ( @chartColPos ) {
+				$chartTitleCols .= $labels[$colPos] . '/';
+			}
+			chop $chartTitleCols;
+
+			$chart->set_title( name => $workSheets{$workSheet}->get_name() . ' - ' . $chartTitleCols );
+		}
 		
 		# each chart consumes about 16 rows
 		$workSheets{$workSheet}->insert_chart((($chartNum * $chartHeight) + 2),3, $chart);
@@ -294,6 +311,8 @@ foreach my $workSheet ( keys %workSheets ) {
 			print "\tCharting column: $col2Chart\n" if $debug;
 			my $chart = $workBook->add_chart( type => $chartType, name => "$col2Chart" . '-' . $workSheets{$workSheet}->get_name(), embedded => 1 );
 			$chart->set_size( width => $chartWidth, height => $chartHeight * $rowHeight);
+			$chart->set_legend( position => $legendPosition );
+			$chart->set_title( name => $workSheets{$workSheet}->get_name() . ' - ' . $labels[$colPos]  ) if $chartTitles;
 
 			# each chart consumes about 16 rows
 			$workSheets{$workSheet}->insert_chart((($chartNum * $chartHeight) + 2),3, $chart);
@@ -338,11 +357,19 @@ dynachart.pl
   --spreadsheet-file output file name - defaults to asm-metrics.xlsx
   --worksheet-col name of column used to segragate data into worksheets 
     defaults to a single worksheet if not supplied
+  --legend-position     left, right, top, bottom - default is bottom
   --auto-filter-enabled enable the drop down Excel filters
   --chart-type default chart type is 'line'
   --chart-cols list of columns to chart
+  --chart-titles       enable chart titles (default)
   --secondary-axis-col name of the column to be on secondary axis
                        works only with combined-chart option
+  --legend-position     left, right, top, bottom - default is bottom
+  --chart-titles       enable chart titles (default)
+  --secondary-axis-col name of the column to be on secondary axis
+                       works only with combined-chart option
+  --legend-position     left, right, top, bottom - default is bottom
+  --auto-filter-enabled enable the drop down Excel filters
 
  dynachart.pl accepts input from STDIN
 
@@ -354,19 +381,23 @@ dynachart.pl
 dynachart.pl [options] [file ...]
 
  Options:
-   --help brief help message
-   --man  full documentation
-   --spreadsheet-file output file name - defaults to asm-metrics.xlsx
-   --worksheet-col name of column used to segragate data into worksheets 
-     defaults to a single worksheet if not supplied
-  --chart-type default chart type is 'line'
-  --chart-cols list of columns to chart
-  --secondary-axis-col name of the column to be on secondary axis
-                       works only with combined-chart option
-  --auto-filter-enabled enable the drop down Excel filters
-  --category-col specify the column for the X vector - a timestamp is typically used 
-    the name must exactly match that in the header
-  --combined-chart create a single chart rather than a chart for each value specified in --chart-cols
+   --help                  brief help message
+   --man                   full documentation
+   --spreadsheet-file      output file name - defaults to asm-metrics.xlsx
+   --worksheet-col         name of column used to segragate data into worksheets 
+                           defaults to a single worksheet if not supplied
+  --chart-type             default chart type is 'line'
+  --chart-cols             list of columns to chart
+  --chart-titles           enable chart titles (default)
+                           worksheet name and column name
+							      combined chart: worksheet name and column names
+  --secondary-axis-col     name of the column to be on secondary axis
+                           works only with combined-chart option
+  --legend-position        left, right, top, bottom - default is bottom
+  --auto-filter-enabled    enable the drop down Excel filters
+  --category-col specify   the column for the X vector - a timestamp is typically used 
+                           the name must exactly  match that in the header
+  --combined-chart         create a single chart rather than a chart for each value specified in --chart-cols
 
  dynachart.pl accepts input from STDIN
 
